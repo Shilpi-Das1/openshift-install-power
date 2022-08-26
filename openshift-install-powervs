@@ -231,6 +231,7 @@ function checkAllNodes {
 #-------------------------------------------------------------------------
 function reboot_node {
   NODE=$1
+  log "Rebooting node function-----------------"
   if [[ -z $ELAPSED_TIME ]]; then
     ELAPSED_TIME=$SECONDS
   elif [[ $((SECONDS - ELAPSED_TIME)) -gt $((REBOOT_TIMEOUT * 60)) ]]; then
@@ -239,6 +240,7 @@ function reboot_node {
     $CLI_PATH pi instance-hard-reboot "$instance_id"
     ELAPSED_TIME=$SECONDS
   fi
+  log "Rebooting node function end-----------------"
 }
 
 #-------------------------------------------------------------------------
@@ -270,11 +272,15 @@ function checkClusterSetup {
   fi
 
   # Check bootstrap connection
+  log "Check Bootstap node function-----------------"
   if [[ $PERCENT -lt 72 ]]; then
+    log "Check Bootstap node function1-----------------"
     if grep -F "ok: [bootstrap] => {\"changed\"" "$LOG_FILE" > /dev/null; then
       PERCENT=72
       unset ELAPSED_TIME
+      log "Check Bootstap node function2-----------------"
     else
+      log "Check Bootstap node function3-----------------"
       reboot_node "$CLUSTER_ID-bootstrap"
       return 0
     fi
@@ -282,12 +288,16 @@ function checkClusterSetup {
 
   # Check masters connection
   for ((i=0;i<MASTER_COUNT;i++)); do
+  log "Check master node function1-----------------"
     if [[ $PERCENT -lt $((73 + i)) ]]; then
+      log "Check master node function2-----------------"
       if grep -F "ok: [master-$i] => {\"changed\"" "$LOG_FILE" > /dev/null; then
         PERCENT=$((73 + i))
         unset ELAPSED_TIME
+	log "Check master node function3-----------------"
       else
         reboot_node "$CLUSTER_ID-master-$i"
+	log "Check master node functio4-----------------"
         return 0
       fi
     fi
@@ -301,12 +311,16 @@ function checkClusterSetup {
 
   # Check workers connection
   for ((i=0;i<WORKER_COUNT;i++)); do
+  log "Check worker node function1-----------------"
     if [[ $PERCENT -lt $((83 + i)) ]]; then
+    log "Check worker node function2-----------------"
       if grep -F "ok: [worker-$i] => {\"changed\"" "$LOG_FILE" > /dev/null; then
         PERCENT=$((83 + i))
         unset ELAPSED_TIME
+	log "Check worker node function3-----------------"
       else
         reboot_node "$CLUSTER_ID-worker-$i"
+	log "Check worker node function4-----------------"
         return 0
       fi
     fi
@@ -332,7 +346,9 @@ function check_bastion {
       if [[ -z ${BASTION_ELAPSED_TIME[$i]} ]]; then
         BASTION_ELAPSED_TIME[$i]=$SECONDS
         PERCENT=$((PERCENT + 2))
+	log "Check bastion node function1-----------------"
       elif [[ $((SECONDS - BASTION_ELAPSED_TIME[i])) -gt $((REBOOT_TIMEOUT * 60)) ]]; then
+        log "Check bastion node function-2----------------"
         warn "Node $instance_name is in WARNING state for more than $REBOOT_TIMEOUT mins. Rebooting the node"
         $CLI_PATH pi instance-hard-reboot "$instance_id"
         BASTION_ELAPSED_TIME[$i]=$SECONDS
